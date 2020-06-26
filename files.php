@@ -1869,6 +1869,7 @@ $all_files_size = 0;
             $ii = 3399;
             foreach ($folders as $f) {
                 $is_link = is_link($path . '/' . $f);
+                $git_status = git_status($path . '/' . $f);
                 $img = $is_link ? 'icon-link_folder' : 'fa fa-folder-o';
                 $modif = date(FM_DATETIME_FORMAT, filemtime($path . '/' . $f));
                 $perms = substr(decoct(fileperms($path . '/' . $f)), -4);
@@ -1889,7 +1890,7 @@ $all_files_size = 0;
                         </div>
                         </td><?php endif; ?>
                     <td>
-                        <div class="filename"><a href="?p=<?php echo urlencode(trim(FM_PATH . '/' . $f, '/')) ?>"><i class="<?php echo $img ?>"></i> <?php echo fm_convert_win(fm_enc($f)) ?>
+                        <div class="filename" <?= $git_status ?> ><a href="?p=<?php echo urlencode(trim(FM_PATH . '/' . $f, '/')) ?>"><i class="<?php echo $img ?>"></i> <?php echo fm_convert_win(fm_enc($f)) ?>
                             </a><?php echo($is_link ? ' &rarr; <i>' . readlink($path . '/' . $f) . '</i>' : '') ?></div>
                     </td>
                     <td><?php if ($calc_folder) { echo fm_get_directorysize($path . '/' . $f); } else { echo lng('Folder'); } ?></td>
@@ -1914,6 +1915,7 @@ $all_files_size = 0;
             $ik = 6070;
             foreach ($files as $f) {
                 $is_link = is_link($path . '/' . $f);
+                $git_status = git_status($path . '/' . $f);
                 $img = $is_link ? 'fa fa-file-text-o' : fm_get_file_icon_class($path . '/' . $f);
                 $modif = date(FM_DATETIME_FORMAT, filemtime($path . '/' . $f));
                 $filesize_raw = fm_get_size($path . '/' . $f);
@@ -1938,7 +1940,7 @@ $all_files_size = 0;
                         </div>
                         </td><?php endif; ?>
                     <td>
-                        <div class="filename"> 
+                        <div class="filename" <?= $git_status ?> > 
                         <?php
                            if (in_array(strtolower(pathinfo($f, PATHINFO_EXTENSION)), array('gif', 'jpg', 'jpeg', 'png', 'bmp', 'ico', 'svg'))): ?>
                                 <?php $imagePreview = fm_enc(FM_ROOT_URL . (FM_PATH != '' ? '/' . FM_PATH : '') . '/' . $f); ?>
@@ -3997,6 +3999,28 @@ function fm_get_images()
         QhBCEEc07ef95/IQQxRt5/3n8hBCEEIQQhBCEEIQQhBCEEIQRzTt5/3n8hBDFG3n/efyEEIQQhBCEEIQQhBCEEIQQhBKUUOWfef95/3n/ef95/IQ
         QhBCEEIQQhBCEEIQQhBCEEIQQhBJRW3n/ef95/3n8hBCEEIQQhBCEEIQQhBCEEIQQhBCEEIQQhBCEEIQQhBCEEIQQhBCEEIQQAAA=='
     );
+}
+
+function git_status($path){
+    $status = shell_exec("git status -s $path");
+    $status = explode("\n", $status);
+    array_pop($status);
+    $status_to_return = "";
+    foreach($status as $file){
+        $X = $file[0];
+        $Y = $file[1];
+        
+        if ($Y == "M" || $Y == "?"){
+            $status_to_return = ' style="background-color:#ff9494" '; // red
+            break;
+        }
+        
+        if ($X == "M" || $X == "A"){
+            $status_to_return = ' style="background-color:yellow" '; // yellow\
+            continue; 
+        }
+    }
+    return $status_to_return;
 }
 
 ?>

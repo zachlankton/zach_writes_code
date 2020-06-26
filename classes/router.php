@@ -4,7 +4,7 @@
         
 /** markdown
 
-# Get Route {#my-cool-header}
+# Get Route
 
 Get Route is a Function that will take 2 parameters: uri, 
 and a routes array and return the route that matches the request

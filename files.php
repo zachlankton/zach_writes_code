@@ -7,6 +7,8 @@ $CONFIG = '{"lang":"en","error_reporting":false,"show_hidden":false,"hide_Cols":
  * CCP Programmers | ccpprogrammers@gmail.com
  * https://tinyfilemanager.github.io
  */
+ 
+ require "parsedown/parsedown.php";
 
 //TFM version
 define('VERSION', '2.4.2');
@@ -43,7 +45,7 @@ $directories_users = array();
 $use_highlightjs = true;
 
 // highlight.js style
-$highlightjs_style = 'vs';
+$highlightjs_style = 'railscasts';
 
 // Enable ace.js (https://ace.c9.io/) on view's page
 $edit_files = true;
@@ -1636,7 +1638,17 @@ if (isset($_GET['view'])) {
                 } else {
                     $content = '<pre>' . fm_enc($content) . '</pre>';
                 }
-                echo $content;
+                
+                $git_status = git_status($file_path);
+                if ($git_status != "clean") { show_git_status($file_path, $git_status); }
+                
+                if ($git_status == "modified"){
+                    show_git_diff($file_path);
+                }else{
+                    echo "<h3>Code:</h3>";
+                    echo $content;    
+                }
+                
             }
             ?>
         </div>
@@ -1869,7 +1881,7 @@ $all_files_size = 0;
             $ii = 3399;
             foreach ($folders as $f) {
                 $is_link = is_link($path . '/' . $f);
-                $git_status = git_status($path . '/' . $f);
+                $git_status = git_status_style($path . '/' . $f);
                 $img = $is_link ? 'icon-link_folder' : 'fa fa-folder-o';
                 $modif = date(FM_DATETIME_FORMAT, filemtime($path . '/' . $f));
                 $perms = substr(decoct(fileperms($path . '/' . $f)), -4);
@@ -1915,7 +1927,7 @@ $all_files_size = 0;
             $ik = 6070;
             foreach ($files as $f) {
                 $is_link = is_link($path . '/' . $f);
-                $git_status = git_status($path . '/' . $f);
+                $git_status = git_status_style($path . '/' . $f);
                 $img = $is_link ? 'fa fa-file-text-o' : fm_get_file_icon_class($path . '/' . $f);
                 $modif = date(FM_DATETIME_FORMAT, filemtime($path . '/' . $f));
                 $filesize_raw = fm_get_size($path . '/' . $f);
@@ -2035,6 +2047,11 @@ $all_files_size = 0;
 
 <?php
 fm_show_footer();
+
+show_readme_md(FM_PATH);
+echo '<div class="container">';
+show_git_status(FM_PATH);
+echo '</div>';
 
 //--- END
 
@@ -4005,22 +4022,57 @@ function git_status($path){
     $status = shell_exec("git status -s $path");
     $status = explode("\n", $status);
     array_pop($status);
-    $status_to_return = "";
+    $status_to_return = "clean";
     foreach($status as $file){
         $X = $file[0];
         $Y = $file[1];
         
         if ($Y == "M" || $Y == "?"){
-            $status_to_return = ' style="background-color:#ff9494" '; // red
+            $status_to_return = 'modified'; 
             break;
         }
         
         if ($X == "M" || $X == "A"){
-            $status_to_return = ' style="background-color:yellow" '; // yellow\
+            $status_to_return = 'staged';
             continue; 
         }
     }
     return $status_to_return;
+}
+
+function git_status_style($path){
+    $git_status = git_status($path);
+    switch ($git_status){
+        case "clean":       return '';
+        case "modified":     return ' style="background-color:#ff9494" ';
+        case "staged":      return ' style="background-color:yellow" ';
+    }
+}
+
+function show_git_status($path, $git_status = ""){
+    $status = shell_exec("git status $path");
+    echo "<hr>";
+    echo "<h3>Git Status: $git_status</h3>";
+    echo '<pre class="with-hljs"> <code class="diff hljs">' . fm_enc($status) . '</code> </pre>  ';
+}
+
+function show_git_diff($path){
+    $diff = shell_exec("git diff $path");
+    echo "<hr>";
+    echo "<h3>Git Diff: </h3>";
+    echo ' <pre class="with-hljs"> <code class="diff hljs">'.fm_enc($diff).'</code> </pre> ';
+}
+
+function show_readme_md($path){
+    $dRoot = $_SERVER['DOCUMENT_ROOT'];
+    $readme = $dRoot . "/" . $path . "/README.md";
+    if (file_exists($readme)){
+        $pd = new Parsedown();
+        $readme = file_get_contents($readme);
+        echo '<hr> <div class="container"> <h5>README.md</h5> <hr> ';
+        echo $pd->text($readme);
+        echo '</div>';
+    }
 }
 
 ?>

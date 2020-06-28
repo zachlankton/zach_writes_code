@@ -1640,9 +1640,8 @@ if (isset($_GET['view'])) {
                 }
                 
                 $git_status = git_status($file_path);
-                if ($git_status != "clean") { show_git_status($file_path, $git_status); }
-                
-                if ($git_status == "modified"){
+                if ($git_status != "clean") { 
+                    show_git_status($file_path, $git_status); 
                     show_git_diff($file_path);
                 }else{
                     echo "<h3>Code:</h3>";
@@ -4057,10 +4056,20 @@ function show_git_status($path, $git_status = ""){
 }
 
 function show_git_diff($path){
-    $diff = shell_exec("git diff $path");
-    echo "<hr>";
-    echo "<h3>Git Diff: </h3>";
-    echo ' <pre class="with-hljs"> <code class="diff hljs">'.fm_enc($diff).'</code> </pre> ';
+    $wDiff = shell_exec("git diff $path");
+    $sDiff = shell_exec("git diff --staged $path");
+    
+    if ($wDiff != NULL){
+        echo "<hr>";
+        echo "<h3>Git Diff (Working Directory) : </h3>";
+        echo ' <pre class="with-hljs"> <code class="diff hljs">'.fm_enc($wDiff).'</code> </pre> ';
+    }
+    
+    if ($sDiff != NULL){
+        echo "<hr>";
+        echo "<h3>Git Diff (Staged) : </h3>";
+        echo ' <pre class="with-hljs"> <code class="diff hljs">'.fm_enc($sDiff).'</code> </pre> ';
+    }
 }
 
 function show_readme_md($path){

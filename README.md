@@ -1,6 +1,6 @@
 # Code Repo for my Youtube Channel
 
-https://youtube.com/zachwritescode
+https://www.youtube.com/channel/UCQiSPyoAPcbInngsyeTq9aA
 
 Hello World!
 ===========
